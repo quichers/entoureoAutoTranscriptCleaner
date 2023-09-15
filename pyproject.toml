@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "encodeocleaner"
+version = "0.1.0"
+authors = ["renaudjester <renaud.jester@outlook.fr>", "Octave Pouillot"]
+readme = "README.md"
+description = ""
+
+[tool.poetry.dependencies]
+python = "^3.11"
+httpx = "^0.25.0"
+hugchat = "^0.2.2"
+dependencies = "^7.7.0"
+
+
+[tool.poetry.group.dev.dependencies]
+python-decouple = "^3.8"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
