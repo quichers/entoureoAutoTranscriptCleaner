@@ -8,6 +8,8 @@ description = ""
 [tool.poetry.dependencies]
 python = "^3.11"
 httpx = "^0.25.0"
+pandas = "^2.1.0"
+python-decouple = "^3.8"
 hugchat = "^0.2.2"
 dependencies = "^7.7.0"
 
