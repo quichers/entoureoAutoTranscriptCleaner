@@ -10,7 +10,6 @@ def main():
     transcriptName, transcriptData = Container.scrapper.get_transcription(
         transcriptions[0]["_id"]
     )
-
     print(transcriptName)
     print(transcriptData)
     # Container.texts_database.get_all_texts()
