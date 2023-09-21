@@ -1,24 +1,17 @@
 import time
-import requests
+from typing import Any
+
 import pandas as pd
+import requests
 
 
-class Scrapper:
+class EntoureoConnection:
     LOGIN_URL = "https://redaction-backend-prod.herokuapp.com/public/connexions/login"
-    CHAPTERS_URL = (
-        "https://redaction-backend-prod.herokuapp.com/platform/chapters/get-all-for-bio"
-    )
-    CHAPTER_URL = "https://redaction-backend-prod.herokuapp.com/platform/chapters/get-chapter-data"
-    TRANSCRIPT_URL = (
-        "https://redaction-backend-prod.herokuapp.com/platform/transcripts/get-model"
-    )
 
     def __init__(self, scrapper_email: str, scrapper_password: str) -> None:
         self.__email = scrapper_email
         self.__password = scrapper_password
         self.__session = requests.session()
-
-    def login(self) -> None:
         if not self.__email or not self.__password:
             print(
                 f"Found {self.__email} for username and {self.__password} "
@@ -38,15 +31,59 @@ class Scrapper:
         )  # If the request went Ok we usually get a 200 status.
 
         self.token = response.json()["accessToken"]
-        self.biographyId = response.json()["projectsList"][0]["_id"]
-        self.userId = response.json()["user"]["_id"]
+        self.biography_id = response.json()["projectsList"][0]["_id"]
+        # self.userId = response.json()["user"]["_id"]
+
+    def post(self, url: str, data: dict[str, Any]) -> requests.Response:
+        return self.__session.post(
+            url,
+            headers={"authorization": self.token},
+            data=data,
+        )
+
+
+class Scrapper:
+    CHAPTERS_URL = (
+        "https://redaction-backend-prod.herokuapp.com/platform/chapters/get-all-for-bio"
+    )
+    CHAPTER_URL = "https://redaction-backend-prod.herokuapp.com/platform/chapters/get-chapter-data"
+    TRANSCRIPT_URL = (
+        "https://redaction-backend-prod.herokuapp.com/platform/transcripts/get-model"
+    )
+
+    def __init__(self, entoureo_connection: EntoureoConnection) -> None:
+        self.__connection = entoureo_connection
+
+    # def login(self) -> None:
+    #     if not self.__email or not self.__password:
+    #         print(
+    #             f"Found {self.__email} for username and {self.__password} "
+    #             f"for password. Need to set them in the .env file"
+    #         )
+    #         return
+
+    #     payload = {"email": self.__email, "password": self.__password}
+
+    #     print("Login to entoureo ...")
+    #     response = self.__session.post(self.LOGIN_URL, data=payload)
+    #     assert (
+    #         200 <= response.status_code < 300
+    #     ), f"The request wasn't valid, got status code {response.status_code}"
+    #     print(
+    #         response.status_code
+    #     )  # If the request went Ok we usually get a 200 status.
+
+    #     self.token = response.json()["accessToken"]
+    #     self.biography_id = response.json()["projectsList"][0]["_id"]
+    #     self.userId = response.json()["user"]["_id"]
 
     def get_all_chapters(self) -> pd.DataFrame:
-        payload = {"biographyId": self.biographyId}
+        payload = {"biographyId": self.__connection.biography_id}
 
         print("Catching chapters ids ...")
-        response = self.__session.post(
-            self.CHAPTERS_URL, headers={"authorization": self.token}, data=payload
+        response = self.__connection.post(
+            self.CHAPTERS_URL,
+            data=payload,
         )
         print(
             response.status_code
@@ -65,8 +102,9 @@ class Scrapper:
         payload = {"chapterId": chapterId}
 
         print("Catching first chapter ...")
-        response = self.__session.post(
-            self.CHAPTER_URL, headers={"authorization": self.token}, data=payload
+        response = self.__connection.post(
+            self.CHAPTER_URL,
+            data=payload,
         )
         print(
             response.status_code
@@ -79,12 +117,17 @@ class Scrapper:
         time.sleep(1)
         return transcriptsList
 
-    def get_transcription(self, transcriptId: str) -> tuple[str, pd.DataFrame]:
+    def get_transcription(
+        self,
+        transcriptId: str,
+        chapter_id: str,
+    ) -> tuple[str, pd.DataFrame]:
         payload = {"transcriptId": transcriptId}
 
         print("Catching first transcription ...")
-        response = self.__session.post(
-            self.TRANSCRIPT_URL, headers={"authorization": self.token}, data=payload
+        response = self.__connection.post(
+            self.TRANSCRIPT_URL,
+            data=payload,
         )
         print(
             response.status_code
@@ -93,5 +136,8 @@ class Scrapper:
         transcriptData = pd.DataFrame(
             response.json()["transcript"]["userTranscriptData"]
         )
+        transcriptData["transcriptId"] = transcriptId
+        transcriptData["chapterId"] = chapter_id
+
         transcriptName = response.json()["transcript"]["title"]
         return (transcriptName, transcriptData)
