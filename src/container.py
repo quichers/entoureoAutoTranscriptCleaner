@@ -1,8 +1,9 @@
 from functools import lru_cache
 from typing import cast
 
-from config import ENTOUREO_EMAIL, ENTOUREO_PASSWORD
 from dependencies import Injector, value
+
+from config import ENTOUREO_EMAIL, ENTOUREO_PASSWORD
 from repositories.scrapper import EntoureoConnection, Scrapper
 from repositories.text_smoother import TextSmootherRepository
 from repositories.texts_database import TextsDatabaseRepository

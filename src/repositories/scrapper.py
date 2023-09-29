@@ -3,6 +3,7 @@ from typing import Any
 
 import pandas as pd
 import requests
+from repositories.texts_database import TextsDatabaseRepository
 
 
 class EntoureoConnection:
@@ -51,8 +52,13 @@ class Scrapper:
         "https://redaction-backend-prod.herokuapp.com/platform/transcripts/get-model"
     )
 
-    def __init__(self, entoureo_connection: EntoureoConnection) -> None:
+    def __init__(
+        self,
+        entoureo_connection: EntoureoConnection,
+        texts_database: TextsDatabaseRepository,
+    ) -> None:
         self.__connection = entoureo_connection
+        self.__texts_database = texts_database
 
     # def login(self) -> None:
     #     if not self.__email or not self.__password:
@@ -138,6 +144,19 @@ class Scrapper:
         )
         transcriptData["transcriptId"] = transcriptId
         transcriptData["chapterId"] = chapter_id
+
+        print(f"Updating local database with {len(transcriptData)} records...")
+        local_database = self.__texts_database.get_all_texts()
+        if local_database is None:
+            print("No local database found, creating one ...")
+            self.__texts_database.save_all_texts(transcriptData)
+        else:
+            # TODO: might cause performance issues: https://stackoverflow.com/questions/49928463/python-pandas-update-a-dataframe-value-from-another-dataframe
+            print("Updating local database ...")
+            updated_texts = pd.concat([local_database, transcriptData]).drop_duplicates(
+                ["_id", "transcriptId", "chapterId"], keep="last"
+            )
+            self.__texts_database.save_all_texts(updated_texts)
 
         transcriptName = response.json()["transcript"]["title"]
         return (transcriptName, transcriptData)
