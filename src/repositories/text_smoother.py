@@ -14,28 +14,27 @@ class TextSmootherRepository:
         cookie_path_dir = "./cookies_snapshot"
         sign.saveCookiesToDir(cookie_path_dir)
         return cookies
-    
 
     def get_transcript(self, original_texts: list[str], preprompt: str) -> list[str]:
         cookies = self.login()
-        
+
         chatbot = hugchat.ChatBot(cookies=cookies.get_dict())
 
         id = chatbot.new_conversation()
         chatbot.change_conversation(id)
-        
+
         chatbot.chat(preprompt)
 
         results = []
         for text in original_texts:
             results.append(chatbot.chat(text))
         return results
-    
-    
+
     def start_conversation(self):
         if not self.username or not self.password:
             print(
-                f"Found {self.username} for username and {self.password} for password. Need to set them in the .env file"
+                f"Found {self.username} for username and {self.password} for password."
+                f"Need to set them in the .env file"
             )
             return
 
@@ -43,7 +42,7 @@ class TextSmootherRepository:
         cookies = sign.login()
         cookie_path_dir = "./cookies_snapshot"
         sign.saveCookiesToDir(cookie_path_dir)
-        
+
         # Create a chatbot connection
         chatbot = hugchat.ChatBot(cookies=cookies.get_dict())
 
