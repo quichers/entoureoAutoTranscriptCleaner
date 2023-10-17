@@ -97,9 +97,8 @@ class Scrapper:
 
         chaptersList = pd.DataFrame(response.json()["chaptersList"])
         chapters2Clean = chaptersList.loc[chaptersList["status"] == "editionProcess"]
-        chaptersSize = chapters2Clean.shape[0]
 
-        print("Number of chapters :", chaptersSize)
+        print("Number of chapters :", chapters2Clean.shape[0])
         print()
         time.sleep(1)
         return chapters2Clean
@@ -126,8 +125,9 @@ class Scrapper:
     def get_transcription(
         self,
         transcriptId: str,
-        chapter_id: str,
-    ) -> tuple[str, pd.DataFrame]:
+        chapterId: str,
+        chapterName: str = "all_texts",
+    ) -> pd.DataFrame:
         payload = {"transcriptId": transcriptId}
 
         print("Catching first transcription ...")
@@ -139,24 +139,37 @@ class Scrapper:
             response.status_code
         )  # If the request went Ok we usually get a 200 status.
 
-        transcriptData = pd.DataFrame(
-            response.json()["transcript"]["userTranscriptData"]
-        )
-        transcriptData["transcriptId"] = transcriptId
-        transcriptData["chapterId"] = chapter_id
+        text_concat = '\n'.join([element['text'] for element in response.json()["transcript"]["userTranscriptData"]])
+        transcriptName = response.json()["transcript"]["title"]
+        transcriptData = pd.DataFrame(data=[{"transcriptName": transcriptName,
+                                            "transcriptId": transcriptId,
+                                            "chapterId" : chapterId,
+                                            "text_concat": text_concat}])
 
-        print(f"Updating local database with {len(transcriptData)} records...")
-        local_database = self.__texts_database.get_all_texts()
+        local_database = self.__texts_database.get_all_texts(chapterName)
         if local_database is None:
             print("No local database found, creating one ...")
-            self.__texts_database.save_all_texts(transcriptData)
+            self.__texts_database.save_all_texts(transcriptData, chapterName)
         else:
             # TODO: might cause performance issues: https://stackoverflow.com/questions/49928463/python-pandas-update-a-dataframe-value-from-another-dataframe
-            print("Updating local database ...")
+            print(f"Updating local database with {len(transcriptData)} record...")
             updated_texts = pd.concat([local_database, transcriptData]).drop_duplicates(
-                ["_id", "transcriptId", "chapterId"], keep="last"
+                ["transcriptName", "transcriptId", "chapterId"], keep="last"
             )
-            self.__texts_database.save_all_texts(updated_texts)
+            self.__texts_database.save_all_texts(updated_texts, chapterName)
 
-        transcriptName = response.json()["transcript"]["title"]
-        return (transcriptName, transcriptData)
+        return transcriptData
+    
+    def get_all_datas(
+            self, 
+            chaptersList: pd.DataFrame
+            ) -> pd.DataFrame:
+        for index, chapter in chaptersList.iterrows():
+            print(chapter["title"])
+            transcriptions = self.get_chapter_data(chapter["_id"])
+
+            for transcript in transcriptions:
+                print(transcript["title"])
+                self.get_transcription(transcript["_id"], chapter["_id"], chapter["title"])
+
+        return 
