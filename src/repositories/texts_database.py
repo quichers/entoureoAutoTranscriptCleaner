@@ -9,7 +9,7 @@ class TextsDatabaseRepository:
 
     def get_all_texts(self, chapterName: str = "all_texts") -> pd.DataFrame | None:
         try:
-            return pd.read_csv(f"data/{self.__name}/{chapterName}.csv", sep="\t", index_col=False)
+            return pd.read_csv(f"data/{self.__name}/{chapterName}.csv", sep=";", index_col=False)
         except FileNotFoundError:
             return None
 
@@ -19,4 +19,4 @@ class TextsDatabaseRepository:
             chapterName: str) -> None:
         if not os.path.exists(f"data/{self.__name}"):
             os.makedirs(f"data/{self.__name}")
-        data.to_csv(f"data/{self.__name}/{chapterName}.csv", sep="\t", index=False)
+        data.to_csv(f"data/{self.__name}/{chapterName}.csv", sep=";", index=False)
