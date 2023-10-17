@@ -19,4 +19,4 @@ class TextsDatabaseRepository:
             chapterName: str) -> None:
         if not os.path.exists(f"data/{self.__name}"):
             os.makedirs(f"data/{self.__name}")
-        data.to_csv(f"data/{self.__name}/{chapterName}.csv", sep=";", index=False)
+        data.to_csv(f"data/{self.__name}/{chapterName}.csv", sep=";", index=False, encoding="utf-8-sig")
