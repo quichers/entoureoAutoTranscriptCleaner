@@ -7,13 +7,13 @@ class TextsDatabaseRepository:
     def __init__(self, name: str) -> None:
         self.__name = name
 
-    def get_all_texts(self, chapterName: str = "all_texts") -> pd.DataFrame | None:
+    def get_text(self, chapterName: str = "all_texts") -> pd.DataFrame | None:
         try:
             return pd.read_csv(f"data/{self.__name}/{chapterName}.csv", sep=";", index_col=False)
         except FileNotFoundError:
             return None
 
-    def save_all_texts(
+    def save_text(
             self, 
             data: pd.DataFrame,
             chapterName: str) -> None:

@@ -146,17 +146,17 @@ class Scrapper:
                                             "chapterId" : chapterId,
                                             "text_concat": text_concat}])
 
-        local_database = self.__texts_database.get_all_texts(chapterName)
+        local_database = self.__texts_database.get_text(chapterName)
         if local_database is None:
             print("No local database found, creating one ...")
-            self.__texts_database.save_all_texts(transcriptData, chapterName)
+            self.__texts_database.save_text(transcriptData, chapterName)
         else:
             # TODO: might cause performance issues: https://stackoverflow.com/questions/49928463/python-pandas-update-a-dataframe-value-from-another-dataframe
             print(f"Updating local database with {len(transcriptData)} record...")
             updated_texts = pd.concat([local_database, transcriptData]).drop_duplicates(
                 ["transcriptName", "transcriptId", "chapterId"], keep="last"
             )
-            self.__texts_database.save_all_texts(updated_texts, chapterName)
+            self.__texts_database.save_text(updated_texts, chapterName)
 
         return transcriptData
     
