@@ -12,6 +12,7 @@ pandas = "^2.1.0"
 python-decouple = "^3.8"
 hugchat = "^0.2.2"
 dependencies = "^7.7.0"
+pendulum = "^2.1.2"
 
 
 [tool.poetry.group.dev.dependencies]
