@@ -68,6 +68,29 @@ class Scrapper:
         self.__connection = entoureo_connection
         self.__texts_database = texts_database
 
+    # def login(self) -> None:
+    #     if not self.__email or not self.__password:
+    #         print(
+    #             f"Found {self.__email} for username and {self.__password} "
+    #             f"for password. Need to set them in the .env file"
+    #         )
+    #         return
+
+    #     payload = {"email": self.__email, "password": self.__password}
+
+    #     print("Login to entoureo ...")
+    #     response = self.__session.post(self.LOGIN_URL, data=payload)
+    #     assert (
+    #         200 <= response.status_code < 300
+    #     ), f"The request wasn't valid, got status code {response.status_code}"
+    #     print(
+    #         response.status_code
+    #     )  # If the request went Ok we usually get a 200 status.
+
+    #     self.token = response.json()["accessToken"]
+    #     self.biography_id = response.json()["projectsList"][0]["_id"]
+    #     self.userId = response.json()["user"]["_id"]
+
     def get_all_chapters(self) -> pd.DataFrame:
         payload = {"biographyId": self.__connection.biography_id}
 
@@ -143,7 +166,6 @@ class Scrapper:
             )
             self.__texts_database.save_text(updated_texts, chapterName)
 
-<<<<<<< HEAD
         return transcriptData
     
     def get_all_datas(
@@ -159,9 +181,6 @@ class Scrapper:
                 self.get_transcription(transcript["_id"], chapter["_id"], chapter["title"])
 
         return 
-=======
-        transcriptName = response.json()["transcript"]["title"]
-        return (transcriptName, transcriptData)
 
     def create_new_story(
         self,
@@ -211,4 +230,3 @@ class Scrapper:
         ), f"The request wasn't valid, got status code {response.status_code}"
         print("Response code: ", response.status_code)
         print(response.json())
->>>>>>> 4c59fc5f4ced5ed185e349e68e00581e46837765
