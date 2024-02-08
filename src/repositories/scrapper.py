@@ -58,6 +58,9 @@ class Scrapper:
     CREATE_STORY = (
         "https://redaction-backend-prod.herokuapp.com/platform/chapters/create-new"
     )
+    TEXTIFY_STORY = (
+        "https://redaction-backend-prod.herokuapp.com/platform/chapters/validate-without-sound"
+    )
     SAVE_TEXT_URL = "https://redaction-backend-prod.herokuapp.com/platform/masters/save-text-modifications"
 
     def __init__(
@@ -134,7 +137,7 @@ class Scrapper:
         self,
         transcriptId: str,
         chapterId: str,
-        chapterName: str = "all_texts",
+        chapterName: str,
     ) -> pd.DataFrame:
         payload = {"transcriptId": transcriptId}
 
@@ -186,6 +189,7 @@ class Scrapper:
         self,
         name: str,
     ):
+        # first step create new story
         response = self.__connection.post(
             url=self.CREATE_STORY,
             data={
@@ -195,6 +199,32 @@ class Scrapper:
             },
         )
         print("Response story creation: ", response.status_code)
+
+        # second step validate the text only style for the story
+        payload = {"biographyId": self.__connection.biography_id}
+        response = self.__connection.post(
+            self.CHAPTERS_URL,
+            data=payload,
+        )
+        print(
+            response.status_code
+        )  # If the request went Ok we usually get a 200 status.
+
+        chaptersList = pd.DataFrame(response.json()["chaptersList"])
+        chapterId = chaptersList.loc[chaptersList["title"] == name]["_id"]
+        print(chaptersList)
+        print(chapterId)
+        # second step validate the text only style for the story
+        response = self.__connection.post(
+        url=self.TEXTIFY_STORY,
+        data={
+            "biographyId": self.__connection.biography_id,
+            "chapterId": chapterId,
+            "userId": self.__connection.userId
+            },
+        )
+        print("Response story creation: ", response.status_code)
+        return chapterId
 
     def save_to_story(self, chapter_id: str, text: str):
         # first step get what they call the "master" info
@@ -209,8 +239,9 @@ class Scrapper:
             200 <= response.status_code < 300
         ), f"The request wasn't valid, got status code {response.status_code}"
         print("Response code: ", response.status_code)
+        print(response.json())
         master = response.json()["master"]
-        master["currentText"] = text
+        master["currentText"] = master["currentText"] + " " + text
         # date using this format: 2021-09-28T14:00:00.000Z
         # master["dateOfLastModification"] = pendulum.now("UTC").to_iso8601_string()
         import json
@@ -221,8 +252,8 @@ class Scrapper:
             url=self.SAVE_TEXT_URL,
             data={
                 "chapterId": chapter_id,
-                "userId": self.__connection.userId,
                 "master": master,
+                "userId": self.__connection.userId,
             },
         )
         assert (

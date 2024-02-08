@@ -17,7 +17,7 @@ class Container(Injector):
 
     @value
     def name() -> str:
-        return "renaudTests"
+        return "fromEntoureo"
 
     @value
     @lru_cache
